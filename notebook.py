@@ -72,6 +72,30 @@ def __(mo):
 
 
 @app.cell
+def __(show):
+    #On crée un fichier cube.stl et on écrit en STL ASCII un cube de longueur 1 avec 12 triangles
+    fichier_cube = open("data\cube.stl", "w")
+    fichier_cube.write("solid cube \n")
+    fichier_cube.write("facet normal 0 0 -1 \n\touter loop \n\t\tvertex 1 0 0 \n\t\tvertex 0 0 0 \n\t\tvertex 0 1 0 \n\tendloop \nendfacet \n")
+    fichier_cube.write("facet normal 0 0 -1 \n\touter loop \n\t\tvertex 1 0 0 \n\t\tvertex 0 1 0 \n\t\tvertex 1 1 0 \n\tendloop \nendfacet \n")
+    fichier_cube.write("facet normal 1 0 0 \n\touter loop \n\t\tvertex 1 0 0 \n\t\tvertex 1 1 0 \n\t\tvertex 1 1 1 \n\tendloop \nendfacet \n")
+    fichier_cube.write("facet normal 0 1 0 \n\touter loop \n\t\tvertex 1 1 0 \n\t\tvertex 0 1 0 \n\t\tvertex 0 1 1 \n\tendloop \nendfacet \n")
+    fichier_cube.write("facet normal -1 0 0 \n\touter loop \n\t\tvertex 0 1 0 \n\t\tvertex 0 0 0 \n\t\tvertex 0 0 1 \n\tendloop \nendfacet \n")
+    fichier_cube.write("facet normal 0 -1 0 \n\touter loop \n\t\tvertex 0 0 0 \n\t\tvertex 1 0 0 \n\t\tvertex 1 0 1 \n\tendloop \nendfacet \n")
+    fichier_cube.write("facet normal 1 0 0 \n\touter loop \n\t\tvertex 1 0 0 \n\t\tvertex 1 1 1 \n\t\tvertex 1 0 1 \n\tendloop \nendfacet \n")
+    fichier_cube.write("facet normal 0 1 0 \n\touter loop \n\t\tvertex 1 1 0 \n\t\tvertex 0 1 1 \n\t\tvertex 1 1 1 \n\tendloop \nendfacet \n")
+    fichier_cube.write("facet normal -1 0 0 \n\touter loop \n\t\tvertex 0 1 0 \n\t\tvertex 0 0 1 \n\t\tvertex 0 1 1 \n\tendloop \nendfacet \n")
+    fichier_cube.write("facet normal 0 -1 0 \n\touter loop \n\t\tvertex 0 0 0 \n\t\tvertex 1 0 1 \n\t\tvertex 0 0 1 \n\tendloop \nendfacet \n")
+    fichier_cube.write("facet normal 0 0 1 \n\touter loop \n\t\tvertex 1 0 1 \n\t\tvertex 1 1 1 \n\t\tvertex 0 1 1 \n\tendloop \nendfacet \n")
+    fichier_cube.write("facet normal 0 0 1 \n\touter loop \n\t\tvertex 1 0 1 \n\t\tvertex 0 1 1 \n\t\tvertex 0 0 1 \n\tendloop \nendfacet \n")
+    fichier_cube.write("endsolid cube")
+    fichier_cube.close()
+    # On montre le résultat
+    show('data\cube.stl',theta= 60,phi =30, scale=1)
+    return (fichier_cube,)
+
+
+@app.cell
 def __(mo):
     mo.md(r"""## STL & NumPy""")
     return
@@ -147,6 +171,44 @@ def __(mo):
 
 
 @app.cell
+def __(np):
+    def make_STL(triangles, normals=None, name=""):
+        fichier = open(f"{name}.stl", "w")
+        fichier.write(f'solid {name} \n')
+        for i in range(len(triangles)):
+            if normals == None :
+                #on définit les coordonnées du vecteur normal au plan
+                X = (triangles[i][1][1]-triangles[i][0][1])*(triangles[i][2][2]-triangles[i][0][2]) - (triangles[i][1][2]-triangles[i][0][2])*(triangles[i][2][1]-triangles[i][0][1])
+                Y = (triangles[i][1][2]-triangles[i][0][2])*(triangles[i][2][0]-triangles[i][0][0]) - (triangles[i][1][0]-triangles[i][0][0])*(triangles[i][2][2]-triangles[i][0][2])
+                Z = (triangles[i][1][0]-triangles[i][0][0])*(triangles[i][2][1]-triangles[i][0][1]) - (triangles[i][1][1]-triangles[i][0][1])*(triangles[i][2][0]-triangles[i][0][0]) 
+                norme = np.sqrt(X**2 + Y**2 + Z**2)
+                fichier.write(f"facet normal {X/norme} {Y/norme} {Z/norme} \n\touter loop \n")
+            else :
+                fichier.write(f"facet normal {normals[i][0]} {normals[i][1]} {normals[i][2]} \n\touter loop \n")
+            for j in range(3):
+                fichier.write("\t\tvertex")
+                for k in range(3):
+                    fichier.write(f" {triangles[i][j][k]}")
+                fichier.write("\n")
+            fichier.write("\tendloop \nendfacet \n")
+        fichier.write(f"endsolid {name}")
+        fichier.close()
+        fichier = open(f"{name}.stl", "r")
+        return f"{fichier.read()}"
+    return (make_STL,)
+
+
+@app.cell
+def __(make_STL, np, show):
+    #on test la fonction
+    square_triangles = np.array([[[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]],[[1.0, 1.0, 0.0], [0.0, 1.0, 0.0], [1.0, 0.0, 0.0]]],dtype=np.float32)
+    print(make_STL(square_triangles, name ="square"))
+
+    show('square.stl',theta= 60,phi =30, scale=1)
+    return (square_triangles,)
+
+
+@app.cell
 def __(mo):
     mo.md(
         """
@@ -190,6 +252,26 @@ def __(mo):
         """
     )
     return
+
+
+@app.cell
+def __(np):
+    def tokenize(stl):
+        liste = stl.split()
+        for i in range(len(liste)):
+            if (liste[i] == 'vertex') or (liste[i] == 'normal') :
+                for r in range(3):
+                    liste[i+r +1] = np.float32(float(liste[i+r+1]))
+        return liste
+
+    #On test la fonction
+    with open("data\square.stl", mode="rt", encoding="us-ascii") as square_file:
+        square_stl = square_file.read()
+
+    print(square_stl)
+    tokens = tokenize(square_stl)
+    print(tokens)
+    return square_file, square_stl, tokenize, tokens
 
 
 @app.cell
@@ -256,6 +338,45 @@ def __(mo):
 
 
 @app.cell
+def __(np, square_stl, tokenize):
+    def parse(tokens):
+        normals = []
+        name = tokens[1]
+        sommets_trg = []
+        for i in range(len(tokens)):
+            if (tokens[i] == 'vertex'):
+                sommet_trg = []
+                for r in range(3):
+                    sommet_trg.append(tokens[i+r+1])
+                sommets_trg.append(sommet_trg)
+            if (tokens[i] == 'normal') :
+                sommet_nrm = []
+                for r in range(3) :
+                    sommet_nrm.append(tokens[i+r+1])
+                normals.append(sommet_nrm)
+
+        triangles = np.array(sommets_trg).reshape((len(sommets_trg)//3, 3, 3))
+        return triangles, np.array(normals), name
+
+    #On teste la fonction
+    token = tokenize(square_stl)
+    triangles, normals, name = parse(token)
+    print(repr(triangles))
+    print(repr(normals))
+    print(repr(name))
+
+    #test 2
+    """with open("data/teapot.stl", mode="rt", encoding="us-ascii") as teapot_file:
+        teapot = teapot_file.read()
+    tokens_teapot = tokenize(teapot)
+    triangles_t, normals_t, name_t = parse(tokens_teapot)
+    print(repr(triangles_t))
+    print(repr(normals_t))
+    print(repr(name_t))"""
+    return name, normals, parse, token, triangles
+
+
+@app.cell
 def __(mo):
     mo.md(
         rf"""
@@ -287,6 +408,85 @@ def __(mo):
     """
     )
     return
+
+
+@app.cell
+def __(np, parse, tokenize):
+    def diagnostic(stl_file):
+        with open(stl_file, mode="rt", encoding="us-ascii") as file:
+            stl = file.read()
+        tokens = tokenize(stl)
+        triangles, normals, name = parse(tokens)
+        #Positive octant rule
+        nb_erreurs = 0
+        total_coordonnées_sommets = 0
+        for triangle in triangles :
+            for i in range(3):
+                for j in range(3):
+                    if triangle[i][j] < 0 :
+                        nb_erreurs += 1
+                    total_coordonnées_sommets += 1
+        print("la règle positive octant est violée à" , (nb_erreurs/total_coordonnées_sommets)*100 , "%")
+
+        #Orientation rule. All normals are (approximately) unit vectors and follow the  right-hand rule.
+        nb_erreurs_2 = 0
+        nb_erreurs_2_bis = 0
+        total_normes = 0
+        for norme in normals :
+            val_norme = np.sqrt(norme[0]**2 + norme[1]**2 + norme[2]**2)
+            if val_norme != 1 :
+                nb_erreurs_2 += 1
+            total_normes += 1
+        print("la règle de l'orientation pour les vecteurs unitaires est violée à", (nb_erreurs_2/total_normes)*100 , "%" )
+        for i in range(len(triangles)) :
+            X = (triangles[i][1][1]-triangles[i][0][1])*(triangles[i][2][2]-triangles[i][0][2]) - (triangles[i][1][2]-triangles[i][0][2])*(triangles[i][2][1]-triangles[i][0][1])
+            Y = (triangles[i][1][2]-triangles[i][0][2])*(triangles[i][2][0]-triangles[i][0][0]) - (triangles[i][1][0]-triangles[i][0][0])*(triangles[i][2][2]-triangles[i][0][2])
+            Z = (triangles[i][1][0]-triangles[i][0][0])*(triangles[i][2][1]-triangles[i][0][1]) - (triangles[i][1][1]-triangles[i][0][1])*(triangles[i][2][0]-triangles[i][0][0]) 
+            norme = [X,Y,Z]
+            if (Y*normals[i][0] != X*normals[i][1]) or (normals[i][0]*Z != X*normals[i][2]) or (normals[i][2]*Y != normals[i][1]*Z) or (normals[i][0]*X < 0):
+                    nb_erreurs_2_bis += 1
+
+        print("la règle de l'orientation pour la règle de la main droite est violée à", (nb_erreurs_2_bis/total_normes)*100 , "%" )
+
+        #Shared edge rule. Each triangle edge appears exactly twice.
+        edges = {}
+        nb_erreurs_3 = 0
+        """for triangle in triangles :
+            if ([triangle[0],triangle[1]] in edges) or ([str(triangle[1]),str(triangle[0])] in edges) :
+                edges[[str(triangle[0]),str(triangle[1])]] += 1
+            else :
+                edges[[str(triangle[0]),str(triangle[1])]] = 1
+
+            if ([str(triangle[0]),str(triangle[2])] in edges) or ([str(triangle[2]),str(triangle[0])] in edges):
+                edges[[str(triangle[0]),str(triangle[2])]] += 1
+            else :
+                edges[[str(triangle[0]),str(triangle[2])]] = 1
+
+            if ([str(triangle[2]),str(triangle[1])] in edges) or ([str(triangle[1]),str(triangle[2])] in edges)  :
+                edges[[str(triangle[2]),str(triangle[1])]] += 1
+            else :
+                edges[[str(triangle[2]),str(triangle[1])]] = 1
+
+        for _, n in edges.items():
+            if n != 2 :
+                nb_erreurs_3 += 1
+        print("la règle shared edge est violée à", (nb_erreurs_3/len(edges))*100 , "%" )"""
+        #Je voulais créer un dictionnaire où les clés seraient les couples de sommets (edges) et les valeurs leur nombre d'apparition
+
+        #Ascending rule. the z-coordinates of (the barycenter of) each triangle are a non-decreasing sequence.
+        nb_erreurs_4 = 0
+        total_triangles = len(triangles)
+        z_coordinates = []
+        for triangle in triangles :
+            z_coordinates.append((triangle[0][2] + triangle[1][2] + triangle[2][2])/3)
+        for i in range(len( z_coordinates) - 1):
+            if z_coordinates[i] > z_coordinates[i+1]:
+                nb_erreurs_4 += 1
+        print("la règle de l'ascendence est violée à", (nb_erreurs_4/total_triangles)*100 , "%" )
+
+    #On teste la fonction
+    diagnostic('data/teapot.stl')
+    return (diagnostic,)
 
 
 @app.cell
@@ -339,6 +539,31 @@ def __(mo):
 
 
 @app.cell
+def __(make_STL, mo, np, show):
+    def OBJ_to_STL(obj_file) :
+        vertices = []
+        faces = [] #une face est définie par trois sommets, elle correspond à un triangle du format STL
+        with open(obj_file, mode="rt", encoding="us-ascii") as file:
+            obj = file.read()
+        l = obj.split()
+        for i in range(len(l)) :
+            if l[i] == 'v' :
+                vertices.append([np.float32(float(l[i+1])) , np.float32(float(l[i+2])) , np.float32(float(l[i+3]))])
+            if l[i] == 'f' :
+                a = int(l[i+1])
+                b = int(l[i+2])
+                c = int(l[i+3])
+                faces.append([vertices[a -1] , vertices[b -1], vertices[c-1]])
+        stl_file = make_STL(np.array(faces), name = obj_file)
+        return stl_file
+
+    #On teste la fonction
+    OBJ_to_STL('data/bunny.obj')
+    mo.show_code(show("data/bunny.obj.stl", scale="1.5"))
+    return (OBJ_to_STL,)
+
+
+@app.cell
 def __(mo):
     mo.md(
         rf"""
@@ -369,20 +594,24 @@ def __(mo, show):
 
 
 @app.cell
-def __(make_STL, np):
+def __(make_STL, mo, np, show):
     def STL_binary_to_text(stl_filename_in, stl_filename_out):
         with open(stl_filename_in, mode="rb") as file:
-            _ = file.read(80)
-            n = np.fromfile(file, dtype=np.uint32, count=1)[0]
+            _ = file.read(80) #on lit juste l'entête
+            n = np.fromfile(file, dtype=np.uint32, count=1)[0] #nombre de faces dans le fichier
             normals = []
             faces = []
             for i in range(n):
                 normals.append(np.fromfile(file, dtype=np.float32, count=3))
                 faces.append(np.fromfile(file, dtype=np.float32, count=9).reshape(3, 3))
-                _ = file.read(2)
+                _ = file.read(2) # short unsigned number 'attribute byte count'
         stl_text = make_STL(faces, normals)
         with open(stl_filename_out, mode="wt", encoding="utf-8") as file:
             file.write(stl_text)
+
+    # On teste la fonction
+    STL_binary_to_text('data/dragon.stl','data/dragon_ascii.stl')
+    mo.show_code(show("data/dragon_ascii.stl", theta=75.0, phi=-20.0, scale=1.7))
     return (STL_binary_to_text,)
 
 
@@ -458,6 +687,26 @@ def __(mo):
 
         """
     )
+    return
+
+
+@app.cell
+def __(mo):
+    mo.md(
+        r"""
+        Un fichier JupyterCAD est stocké dans un dictionnaire. 
+        Ce dictionnaire contient comme clés : metadata qui renvoit à un dictionnaire, objects qui a comme valeur une liste de dictionnaires, options et output qui ont comme clés des dictionnaires et schemaVersion qui a comme valeur une chaine str.
+        """
+    )
+    return
+
+
+@app.cell
+def __():
+    #def jcad_to_stl(jcad_file, stl_file):
+        
+    #On teste le modèle
+    #jcad_to_stl('data/demo_jcad.jcad', 'data/demo_jcad_to_stl.stl')
     return
 
 
