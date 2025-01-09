@@ -702,12 +702,35 @@ def __(mo):
 
 
 @app.cell
-def __():
-    #def jcad_to_stl(jcad_file, stl_file):
-        
+def __(csg_file):
+    def jcad_to_stl(jcad_file, stl_file):
+        with open(jcad_file, mode="rt") as file:
+            data = file.read()
+        objects = []
+        positions = {}
+        for shape in data.get('objects', []):
+            if shape['name'] == 'Box':
+                objects.append(f"box([{shape['Height']}, {shape['Lenght']}, {shape['Width']}]);")
+                positions['Box'] = shape['Position']
+            elif shape['name'] == 'Sphere':
+                objects.append(f"sphere({shape['Radius']});")
+                positions['Sphere'] = shape['Position']
+            elif shape['name'] == 'Cylinder 1':
+                objects.append(f"cylinder(h={shape['Height']}, r={shape['Radius']});")
+                positions['Cylinder 1'] = shape['Position']
+            elif shape['name'] == 'Cylinder 2':
+                objects.append(f"cylinder(h={shape['Height']}, r={shape['Radius']});")
+                positions['Cylinder 2'] = shape['Position']
+            elif shape['name'] == 'Cylinder 3':
+                objects.append(f"cylinder(h={shape['Height']}, r={shape['Radius']});")
+                positions['Cylinder 3'] = shape['Position']
+
+            #objectif : recréer un fichier csg
+            
+        csg_file.save("output/demo-csg-alt.stl", step=0.05)
     #On teste le modèle
     #jcad_to_stl('data/demo_jcad.jcad', 'data/demo_jcad_to_stl.stl')
-    return
+    return (jcad_to_stl,)
 
 
 @app.cell
